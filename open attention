@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Open Focus — Epic Web App Book</title>
+  <meta name="description" content="An interactive website/app-book that teaches Open Focus: the attentional foundation of health and well‑being. Includes lessons, audio-style guidance, breathing pacer, quizzes, progress, and a downloadable certificate." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%230b0f19'/%3E%3Ccircle cx='50' cy='50' r='26' fill='%237c9cff'/%3E%3Ccircle cx='50' cy='50' r='8' fill='white'/%3E%3C/svg%3E" />
+  <style>
+    :root{
+      --bg:#0b0f19; --panel:#0f1626; --fg:#e6e9f2; --muted:#9aa4b2; --brand:#7c9cff; --accent:#5cf2c7; --good:#4ade80; --warn:#f59e0b; --bad:#ef4444;
+      --glass:rgba(255,255,255,.06); --card:rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,cantarell,'Helvetica Neue',Arial; background:radial-gradient(1200px 800px at 70% -10%, #1b243a 0%, var(--bg) 50%); color:var(--fg);}
+    a{color:var(--accent);text-decoration:none}
+    header{position:sticky;top:0;backdrop-filter: blur(8px); background:linear-gradient(180deg, rgba(11,15,25,.9), rgba(11,15,25,.6)); z-index:20; border-bottom:1px solid rgba(255,255,255,.06)}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    .nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{background:var(--card);border:1px solid rgba(255,255,255,.08);padding:10px 14px;border-radius:14px;color:var(--fg);cursor:pointer}
+    .btn:hover{background:rgba(255,255,255,.12)}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.6px}
+    .brand .dot{width:12px;height:12px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 6px rgba(124,156,255,.2)}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:18px}
+    @media (max-width:980px){ .layout{grid-template-columns:1fr} }
+    aside{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px;position:sticky;top:76px;height:max-content}
+    main{min-height:70vh}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px;margin-bottom:14px}
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:center}
+    @media (max-width:980px){ .hero{grid-template-columns:1fr} }
+    h1{font-size:clamp(28px, 3.3vw, 44px);margin:6px 0 4px}
+    h2{font-size:clamp(20px,2.4vw,28px);margin:8px 0}
+    h3{font-size:20px;margin:8px 0}
+    p{line-height:1.6;color:var(--fg)}
+    .muted{color:var(--muted)}
+    .toc a{display:block;padding:8px 10px;border-radius:10px;color:var(--fg)}
+    .toc a:hover,.toc a.active{background:rgba(124,156,255,.16)}
+    .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(92,242,199,.12);color:var(--accent);border:1px solid rgba(92,242,199,.25); padding:6px 10px;border-radius:999px;font-weight:600}
+    .grid{display:grid;gap:12px}
+    .two{grid-template-columns:repeat(2,1fr)}
+    .three{grid-template-columns:repeat(3,1fr)}
+    @media (max-width:900px){ .two,.three{grid-template-columns:1fr} }
+    .pacer{display:flex;flex-direction:column;align-items:center;gap:10px}
+    .bubble{width:140px;height:140px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #b6c7ff, #5977ff 60%, #3144a7); box-shadow:0 10px 40px rgba(124,156,255,.45); transform:scale(var(--scale,1)); transition:transform 2s ease}
+    .slider{width:100%}
+    .quiz-q{margin:10px 0}
+    .opt{display:block;margin:6px 0;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);cursor:pointer;border:1px solid rgba(255,255,255,.08)}
+    .opt.correct{outline:2px solid var(--good)}
+    .opt.wrong{outline:2px solid var(--bad)}
+    .progress{height:10px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
+    .progress>span{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--accent));width:0}
+    .lang{margin-left:auto}
+    .pill{padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+    canvas#cert{width:100%;max-width:800px;background:#fff;border-radius:12px}
+    .footer{margin:40px 0 20px;color:var(--muted);text-align:center}
+    .kbd{background:#111827;border:1px solid #374151;color:#e5e7eb;border-radius:6px;padding:2px 6px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <div class="brand"><span class="dot"></span> Open Focus</div>
+      <button class="btn" data-scroll="#lesson-1">Start</button>
+      <button class="btn" data-scroll="#practice">Practice</button>
+      <button class="btn" data-scroll="#quiz">Quiz</button>
+      <button class="btn" data-scroll="#certificate">Certificate</button>
+      <div class="lang pill">
+        <label for="langSel" class="muted" style="margin-right:8px">Language</label>
+        <select id="langSel" class="btn" style="padding:8px 10px">
+          <option value="en" selected>English</option>
+          <option value="fr">Français</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap layout">
+    <aside>
+      <h3 data-i="toc">Contents</h3>
+      <div class="toc grid">
+        <a href="#cover" class="active" data-toc>Cover</a>
+        <a href="#lesson-1" data-toc>1 • What is Open Focus?</a>
+        <a href="#lesson-2" data-toc>2 • Why attention shapes health</a>
+        <a href="#lesson-3" data-toc>3 • The Open Focus skillset</a>
+        <a href="#practice" data-toc>Practice Lab</a>
+        <a href="#program" data-toc>7‑Day Program</a>
+        <a href="#quiz" data-toc>Quiz</a>
+        <a href="#certificate" data-toc>Certificate</a>
+      </div>
+      <div class="card">
+        <div class="badge">10% to feed the hungry</div>
+        <p class="muted" style="margin-top:8px" data-i="impact">Thank you for learning with purpose. A portion of proceeds supports hunger relief.</p>
+      </div>
+      <div class="card">
+        <h3 data-i="offlineTitle">Offline‑ready</h3>
+        <p class="muted" data-i="offline">Install this as an app from your browser menu. Works offline after first load.</p>
+      </div>
+    </aside>
+
+    <main>
+      <section id="cover" class="card hero">
+        <div>
+          <h1 data-i="title">Open Focus — The Attentional Foundation of Health & Well‑Being</h1>
+          <p class="muted" data-i="subtitle">A modern, practical, research‑informed guide to shifting from narrow, effortful attention to a relaxed, spacious awareness that calms the nervous system and unlocks resilience.</p>
+          <div class="grid two" style="margin-top:12px">
+            <button class="btn" data-scroll="#lesson-1" data-i="btnStart">Start Learning</button>
+            <button class="btn" data-scroll="#practice" data-i="btnPractice">Go to Practice Lab</button>
+          </div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:90px;line-height:1">◯</div>
+          <p class="muted" data-i="coverBlurb">Imagine your attention as a circle. Tighten it and stress amplifies. Soften and widen it—and the body settles.</p>
+        </div>
+      </section>
+
+      <section id="lesson-1" class="card">
+        <h2 data-i="l1">1) What is Open Focus?</h2>
+        <p data-i="l1p1">Open Focus is a trainable way of paying attention: instead of locking onto one object, you include space, periphery, body sensations, emotions, and thoughts at once—softly and without strain.</p>
+        <p data-i="l1p2">Most of us live in narrow focus: we fixate on problems, clench muscles, and force concentration. This amplifies stress responses. Open Focus invites a diffused, inclusive awareness that reduces effort and restores flexibility.</p>
+      </section>
+
+      <section id="lesson-2" class="card">
+        <h2 data-i="l2">2) Why attention shapes health</h2>
+        <div class="grid two">
+          <div>
+            <h3 data-i="l2a">Tension follows attention</h3>
+            <p data-i="l2ap">When attention narrows under threat, muscles brace, breath becomes shallow, and pain & stress intensify. Chronic narrowness keeps this loop alive.</p>
+            <h3 data-i="l2b">Diffuse, inclusive awareness calms the system</h3>
+            <p data-i="l2bp">Shifting to Open Focus reduces unnecessary effort, balances the autonomic nervous system, and improves learning, performance, and mood.</p>
+          </div>
+          <div class="card">
+            <h3 data-i="try">Try now (1 minute)</h3>
+            <ol>
+              <li data-i="t1">Notice the space between your eyes. Sense its volume.</li>
+              <li data-i="t2">Include the space inside your mouth… throat… chest.</li>
+              <li data-i="t3">Let awareness widen to the room—front, sides, behind.</li>
+              <li data-i="t4">Without effort, include breath and any feelings—let them be.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section id="lesson-3" class="card">
+        <h2 data-i="l3">3) The Open Focus skillset</h2>
+        <div class="grid three">
+          <div class="card">
+            <h3 data-i="s1">Sense Space</h3>
+            <p data-i="s1p">Ask gentle questions that evoke spacious perception: What is the distance between your ears? Can you sense the space around your hands?</p>
+          </div>
+          <div class="card">
+            <h3 data-i="s2">Include & Diffuse</h3>
+            <p data-i="s2p">Allow multiple sensations, thoughts, and sounds at once. Let attention be soft, panoramic, and non‑exclusive.</p>
+          </div>
+          <div class="card">
+            <h3 data-i="s3">Soften Effort</h3>
+            <p data-i="s3p">Notice gripping in the jaw, eyes, shoulders, belly. Let effort drain on the out‑breath. Replace control with curiosity.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="practice" class="card">
+        <h2 data-i="lab">Practice Lab</h2>
+        <div class="grid two">
+          <div class="card">
+            <h3 data-i="guide1">Guided: Space Awareness</h3>
+            <p class="muted" data-i="guide1d">Press play and follow the prompts. Pace slider adjusts the breath/prompt timing.</p>
+            <div class="pacer">
+              <div class="bubble" id="bubble"></div>
+              <div>
+                <button class="btn" id="playBtn" data-i="play">Play</button>
+                <button class="btn" id="stopBtn" data-i="stop">Stop</button>
+              </div>
+              <label for="pace" class="muted" data-i="pace">Pace (seconds per phase): <span id="paceVal">4</span></label>
+              <input id="pace" class="slider" type="range" min="3" max="8" value="4" />
+              <div id="script" class="muted" style="min-height:48px;margin-top:8px"></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i="mini">Mini‑Practices (anywhere)</h3>
+            <ul>
+              <li data-i="m1">Feel the space inside your cheeks for three breaths.</li>
+              <li data-i="m2">Sense the room behind you while reading these words.</li>
+              <li data-i="m3">Let sounds, sights, and sensations arrive together—no need to choose.</li>
+              <li data-i="m4">Soften the eyes; imagine peripheral vision expanding 360°.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="program" class="card">
+        <h2 data-i="prog">7‑Day Open Focus Program</h2>
+        <div class="grid two">
+          <div>
+            <ol>
+              <li data-i="d1"><strong>Day 1:</strong> Learn the idea. 5 × 2‑minute space sensing.</li>
+              <li data-i="d2"><strong>Day 2:</strong> Add body scan with space (eyes, jaw, chest, belly).</li>
+              <li data-i="d3"><strong>Day 3:</strong> Include emotions as sensations in space.</li>
+              <li data-i="d4"><strong>Day 4:</strong> Work & study: panoramic awareness while focused.</li>
+              <li data-i="d5"><strong>Day 5:</strong> Movement practice (walk with wide awareness).</li>
+              <li data-i="d6"><strong>Day 6:</strong> Stress relief protocol (see Quick Reset below).</li>
+              <li data-i="d7"><strong>Day 7:</strong> 10‑minute continuous practice; reflect & plan.</li>
+            </ol>
+          </div>
+          <div class="card">
+            <h3 data-i="reset">Quick Reset (2 minutes)</h3>
+            <ol>
+              <li data-i="r1">Soften eyes → sense space between your eyes.</li>
+              <li data-i="r2">Include mouth, throat, chest, belly.</li>
+              <li data-i="r3">Widen to the whole room, 360°.</li>
+              <li data-i="r4">Breathe out slowly; let muscles melt.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section id="quiz" class="card">
+        <h2 data-i="quizTitle">Check Your Understanding</h2>
+        <div class="progress" aria-label="progress"><span id="bar"></span></div>
+        <div id="quizBox"></div>
+        <div class="grid two" style="margin-top:10px">
+          <button class="btn" id="restart" data-i="restart">Restart</button>
+          <div><span id="score"></span></div>
+        </div>
+      </section>
+
+      <section id="certificate" class="card">
+        <h2 data-i="certTitle">Download Your Certificate</h2>
+        <div class="grid two">
+          <div>
+            <label class="muted" data-i="yourName">Your name</label>
+            <input id="yourName" class="btn" placeholder="Your Name" style="width:100%;margin:6px 0 10px"/>
+            <button class="btn" id="makeCert" data-i="makeCert">Generate Certificate</button>
+            <button class="btn" id="saveCert" data-i="saveCert">Save as PNG</button>
+            <p class="muted" style="margin-top:6px" data-i="certNote">Tip: you can also print this page to PDF (<span class="kbd">Ctrl/Cmd</span> + <span class="kbd">P</span>).</p>
+          </div>
+          <div>
+            <canvas id="cert" width="1200" height="800"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer">© <span id="yr"></span> Open Focus App‑Book • Built with love • <a href="#cover">Back to top</a></div>
+    </main>
+  </div>
+
+  <script>
+  // ===== i18n strings =====
+  const STR = {
+    en:{
+      toc:'Contents',impact:'Thank you for learning with purpose. A portion of proceeds supports hunger relief.',
+      offlineTitle:'Offline‑ready', offline:'Install this as an app from your browser menu. Works offline after first load.',
+      title:'Open Focus — The Attentional Foundation of Health & Well‑Being', subtitle:'A modern, practical, research‑informed guide to shifting from narrow, effortful attention to a relaxed, spacious awareness that calms the nervous system and unlocks resilience.',
+      btnStart:'Start Learning', btnPractice:'Go to Practice Lab', coverBlurb:'Imagine your attention as a circle. Tighten it and stress amplifies. Soften and widen it—and the body settles.',
+      l1:'1) What is Open Focus?', l1p1:'Open Focus is a trainable way of paying attention: instead of locking onto one object, you include space, periphery, body sensations, emotions, and thoughts at once—softly and without strain.', l1p2:'Most of us live in narrow focus: we fixate on problems, clench muscles, and force concentration. This amplifies stress responses. Open Focus invites a diffused, inclusive awareness that reduces effort and restores flexibility.',
+      l2:'2) Why attention shapes health', l2a:'Tension follows attention', l2ap:'When attention narrows under threat, muscles brace, breath becomes shallow, and pain & stress intensify. Chronic narrowness keeps this loop alive.', l2b:'Diffuse, inclusive awareness calms the system', l2bp:'Shifting to Open Focus reduces unnecessary effort, balances the autonomic nervous system, and improves learning, performance, and mood.', try:'Try now (1 minute)', t1:'Notice the space between your eyes. Sense its volume.', t2:'Include the space inside your mouth… throat… chest.', t3:'Let awareness widen to the room—front, sides, behind.', t4:'Without effort, include breath and any feelings—let them be.',
+      l3:'3) The Open Focus skillset', s1:'Sense Space', s1p:'Ask gentle questions that evoke spacious perception: What is the distance between your ears? Can you sense the space around your hands?', s2:'Include & Diffuse', s2p:'Allow multiple sensations, thoughts, and sounds at once. Let attention be soft, panoramic, and non‑exclusive.', s3:'Soften Effort', s3p:'Notice gripping in the jaw, eyes, shoulders, belly. Let effort drain on the out‑breath. Replace control with curiosity.',
+      lab:'Practice Lab', guide1:'Guided: Space Awareness', guide1d:'Press play and follow the prompts. Pace slider adjusts the breath/prompt timing.', play:'Play', stop:'Stop', pace:'Pace (seconds per phase): ',
+      mini:'Mini‑Practices (anywhere)', m1:'Feel the space inside your cheeks for three breaths.', m2:'Sense the room behind you while reading these words.', m3:'Let sounds, sights, and sensations arrive together—no need to choose.', m4:'Soften the eyes; imagine peripheral vision expanding 360°.',
+      prog:'7‑Day Open Focus Program', d1:'Day 1: Learn the idea. 5 × 2‑minute space sensing.', d2:'Day 2: Add body scan with space (eyes, jaw, chest, belly).', d3:'Day 3: Include emotions as sensations in space.', d4:'Day 4: Work & study: panoramic awareness while focused.', d5:'Day 5: Movement practice (walk with wide awareness).', d6:'Day 6: Stress relief protocol (see Quick Reset below).', d7:'Day 7: 10‑minute continuous practice; reflect & plan.', reset:'Quick Reset (2 minutes)', r1:'Soften eyes → sense space between your eyes.', r2:'Include mouth, throat, chest, belly.', r3:'Widen to the whole room, 360°.', r4:'Breathe out slowly; let muscles melt.',
+      quizTitle:'Check Your Understanding', restart:'Restart',
+      certTitle:'Download Your Certificate', yourName:'Your name', makeCert:'Generate Certificate', saveCert:'Save as PNG', certNote:'Tip: you can also print this page to PDF (',
+    },
+    fr:{
+      toc:'Sommaire',impact:"Merci d'apprendre avec intention. Une partie des recettes soutient la lutte contre la faim.",
+      offlineTitle:'Prêt hors‑ligne', offline:"Installez‑le comme application depuis le menu du navigateur. Fonctionne hors‑ligne après le premier chargement.",
+      title:'Open Focus — Les bases attentionnelles de la santé et du bien‑être', subtitle:"Un guide moderne et pratique pour passer d'une attention étroite et tendue à une conscience ample et détendue qui apaise le système nerveux.",
+      btnStart:'Commencer', btnPractice:'Aller au Laboratoire', coverBlurb:"Imaginez votre attention comme un cercle. Plus il se resserre, plus le stress augmente. Adoucissez et élargissez‑le — et le corps se calme.",
+      l1:'1) Qu’est‑ce que l’Open Focus ?', l1p1:"Open Focus est une manière entraînable de prêter attention : au lieu de se fixer sur un seul objet, on inclut l’espace, la périphérie, les sensations du corps, les émotions et les pensées — en douceur et sans effort.", l1p2:"La plupart d’entre nous vivent en focus étroit : on s’accroche aux problèmes, on se crispe et on force la concentration. Cela amplifie le stress. Open Focus invite une conscience diffuse et inclusive qui réduit l’effort et restaure la flexibilité.",
+      l2:'2) Pourquoi l’attention façonne la santé', l2a:"La tension suit l’attention", l2ap:"Quand l’attention se rétrécit sous la menace, les muscles se contractent, la respiration devient courte, et la douleur et le stress s’intensifient.", l2b:"Une conscience diffuse apaise le système", l2bp:"Passer à l’Open Focus réduit l’effort inutile, équilibre le système nerveux autonome et améliore l’apprentissage, la performance et l’humeur.", try:'Essayez maintenant (1 min)', t1:"Sentez l’espace entre vos yeux. Percevez son volume.", t2:"Incluez l’espace dans la bouche… la gorge… la poitrine.", t3:"Élargissez à toute la pièce — devant, côtés, derrière.", t4:"Sans effort, incluez la respiration et les sentiments — laissez‑les être.",
+      l3:"3) Les compétences d’Open Focus", s1:"Sentir l’Espace", s1p:"Posez des questions douces qui évoquent la perception de l’espace : Quelle est la distance entre vos oreilles ? Pouvez‑vous sentir l’espace autour de vos mains ?", s2:"Inclure & Diffuser", s2p:"Laissez coexister sensations, pensées et sons. Une attention panoramique, non exclusive.", s3:"Adoucir l’Effort", s3p:"Remarquez la crispation des yeux, mâchoire, épaules, ventre. Laissez l’effort s’écouler à l’expiration.",
+      lab:'Laboratoire de Pratique', guide1:"Guidé : conscience de l’espace", guide1d:"Appuyez sur lecture et suivez les invites. Le curseur règle le tempo.", play:'Lecture', stop:'Arrêter', pace:'Rythme (sec/phase) : ',
+      mini:'Mini‑pratiques (partout)', m1:"Sentez l’espace à l’intérieur des joues pendant trois respirations.", m2:"Sentez la pièce derrière vous en lisant ces mots.", m3:"Laissez arriver sons, vues et sensations ensemble — sans choisir.", m4:"Détendez les yeux; imaginez une vision périphérique à 360°.",
+      prog:'Programme sur 7 jours', d1:"Jour 1 : Comprendre l’idée. 5 × 2 min.", d2:"Jour 2 : Scanner du corps avec l’espace.", d3:"Jour 3 : Inclure les émotions comme sensations dans l’espace.", d4:"Jour 4 : Travail & étude en conscience panoramique.", d5:"Jour 5 : Pratique en mouvement (marche).", d6:"Jour 6 : Protocole anti‑stress.", d7:"Jour 7 : 10 minutes continues; bilan.", reset:'Réinitialisation rapide (2 min)', r1:"Adoucir les yeux → espace entre les yeux.", r2:"Inclure bouche, gorge, poitrine, ventre.", r3:"Élargir à toute la pièce, 360°.", r4:"Expirer lentement; relâcher les muscles.",
+      quizTitle:'Vérifiez vos connaissances', restart:'Recommencer',
+      certTitle:'Télécharger votre certificat', yourName:'Votre nom', makeCert:'Générer le certificat', saveCert:'Enregistrer en PNG', certNote:'Astuce : vous pouvez aussi imprimer en PDF (',
+    },
+    ar:{
+      toc:'المحتويات',impact:'شكراً لتعلّمك بهدف نبيل. جزء من العائدات لدعم مكافحة الجوع.',
+      offlineTitle:'يدعم العمل دون إنترنت', offline:'ثبّت التطبيق من قائمة المتصفح. يعمل دون إنترنت بعد التحميل الأول.',
+      title:'التركيز المنفتح — أساس الانتباه للصحة والرفاه', subtitle:'دليل عملي حديث للانتقال من انتباه ضيق مجهد إلى وعي واسع مريح يهدّئ الجهاز العصبي.',
+      btnStart:'ابدأ', btnPractice:'مختبر التمرين', coverBlurb:'تخيّل انتباهك دائرة. كلما ضاق زاد التوتر. إذا لان واتّسع — يهدأ الجسد.',
+      l1:'1) ما هو التركيز المنفتح؟', l1p1:'هو طريقة قابلة للتدريب للانتباه تشمل الفضاء والمحيط وإحساس الجسد والمشاعر والأفكار معاً بلطف وبدون جهد.', l1p2:'نعيش غالباً بتركيز ضيّق فنتمسّك بالمشكلات ونتشنّج ونجبر أنفسنا على التركيز، فيتضخّم الضغط. يدعو التركيز المنفتح إلى وعي شامل يخفّف الجهد ويعيد المرونة.',
+      l2:'2) لماذا يشكّل الانتباه صحتنا؟', l2a:'التوتر يتبع الانتباه', l2ap:'عندما يضيق الانتباه تحت التهديد تتصلّب العضلات ويضحلّ النفس وتشتدّ الآلام والضغط.', l2b:'الوعي الشامل يهدّئ النظام', l2bp:'التحوّل إلى التركيز المنفتح يقلّل الجهد غير الضروري ويوازن الجهاز العصبي ويحسن التعلم والأداء والمزاج.', try:'جرّب الآن (دقيقة)', t1:'لاحظ المسافة بين عينيك. استشعر حجمها.', t2:'اشمل فراغ الفم… الحلق… الصدر.', t3:'وسّع الوعي ليشمل الغرفة أمامك وعن الجانبين وخلفك.', t4:'ودون جهد اشمل التنفس وأي مشاعر — ودعها تكون.',
+      l3:'3) مهارات التركيز المنفتح', s1:'استشعار الفضاء', s1p:'أسئلة لطيفة تستحضر الإحساس بالحيّز: ما المسافة بين أذنيك؟ هل تشعر بالمساحة حول يديك؟', s2:'الشمول والانتشار', s2p:'اسمح بتواجد الأحاسيس والأفكار والأصوات معاً. انتباه بانورامي غير حصري.', s3:'تليين الجهد', s3p:'لاحظ الشد في الفك والعينين والكتفين والبطن. دعه يذوب مع الزفير.',
+      lab:'مختبر التمرين', guide1:'إرشاد: وعي الفضاء', guide1d:'اضغط تشغيل واتبع الإرشادات. منزلق السرعة يضبط الإيقاع.', play:'تشغيل', stop:'إيقاف', pace:'السرعة (ثوانٍ لكل مرحلة): ',
+      mini:'تمارين سريعة', m1:'اشعر بالفراغ داخل الخدّين لثلاثة أنفاس.', m2:'استشعر الغرفة خلفك وأنت تقرأ هذه الكلمات.', m3:'دع الأصوات والمشاهد والأحاسيس تصل معاً.', m4:'ليّن العينين وتخيّل رؤية محيطية 360°.',
+      prog:'برنامج 7 أيام', d1:'اليوم 1: فهم الفكرة. خمس مرات × دقيقتين.', d2:'اليوم 2: مسح الجسد مع الإحساس بالفضاء.', d3:'اليوم 3: اشمل المشاعر كأحاسيس داخل الفضاء.', d4:'اليوم 4: العمل والدراسة بوعي بانورامي.', d5:'اليوم 5: تمرين بالحركة (المشي).', d6:'اليوم 6: بروتوكول تخفيف التوتر.', d7:'اليوم 7: عشر دقائق متواصلة؛ مراجعة وخطة.', reset:'استعادة سريعة (دقيقتان)', r1:'ليّن العينين → المسافة بين العينين.', r2:'اشمل الفم والحلق والصدر والبطن.', r3:'وسّع الوعي لكل الغرفة 360°.', r4:'ازفر ببطء ودع العضلات تذوب.',
+      quizTitle:'اختبر فهمك', restart:'إعادة البدء',
+      certTitle:'حمّل شهادتك', yourName:'اسمك', makeCert:'إنشاء الشهادة', saveCert:'حفظ كصورة', certNote:'تلميح: يمكنك أيضاً الطباعة إلى PDF (',
+    }
+  }
+
+  // language apply
+  const applyLang = (lang)=>{
+    const map = STR[lang]||STR.en; const set=(sel,k)=>{ const el=document.querySelector(sel); if(el) el.textContent = map[k]; };
+    document.querySelectorAll('[data-i]').forEach(el=>{ const key=el.getAttribute('data-i'); if(map[key]){ el.textContent = map[key]; }});
+    document.documentElement.lang = lang; document.documentElement.dir = (lang==='ar'?'rtl':'ltr');
+  }
+
+  // nav scroll
+  document.querySelectorAll('[data-scroll]').forEach(b=>b.addEventListener('click',()=>{
+    const t=document.querySelector(b.getAttribute('data-scroll')); t&&t.scrollIntoView({behavior:'smooth'});
+  }));
+  document.querySelectorAll('[data-toc]').forEach(a=>a.addEventListener('click',e=>{
+    document.querySelectorAll('.toc a').forEach(x=>x.classList.remove('active')); e.target.classList.add('active');
+  }))
+
+  // year
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // i18n init
+  const langSel = document.getElementById('langSel');
+  langSel.value = localStorage.getItem('of_lang')||'en';
+  applyLang(langSel.value);
+  langSel.addEventListener('change', ()=>{ localStorage.setItem('of_lang', langSel.value); applyLang(langSel.value); })
+
+  // ===== Guided pacer & script =====
+  const bubble = document.getElementById('bubble');
+  const scriptBox = document.getElementById('script');
+  const pace = document.getElementById('pace');
+  const paceVal = document.getElementById('paceVal');
+  pace.addEventListener('input',()=> paceVal.textContent = pace.value);
+  paceVal.textContent = pace.value;
+
+  let timer=null, phase=0;
+  const enLines = [
+    'Soften the eyes',
+    'Sense space between your eyes',
+    'Include the space in mouth and throat',
+    'Include chest and belly',
+    'Widen to the whole room, 360°',
+    'Let everything be, breathe out slowly'
+  ];
+  const frLines = [
+    'Adoucissez les yeux',
+    "Sentez l’espace entre vos yeux",
+    'Incluez la bouche et la gorge',
+    'Incluez la poitrine et le ventre',
+    'Élargissez à toute la pièce, 360°',
+    'Laissez tout être, expirez lentement'
+  ];
+  const arLines = [
+    'ليِّن العينين',
+    'استشعر المسافة بين العينين',
+    'اشمل الفم والحلق',
+    'اشمل الصدر والبطن',
+    'وسِّع الوعي لكل الغرفة 360°',
+    'دع كل شيء يكون وازفر ببطء'
+  ];
+  const linesFor = ()=> ({en:enLines, fr:frLines, ar:arLines})[langSel.value]||enLines;
+
+  const step = ()=>{
+    const lines = linesFor();
+    scriptBox.textContent = lines[phase % lines.length];
+    document.body.style.setProperty('--scale', (phase%2===0?1.0:1.2));
+    phase++;
+  }
+  const start = ()=>{ if(timer) return; step(); timer=setInterval(step, Number(pace.value)*1000); }
+  const stop = ()=>{ clearInterval(timer); timer=null; scriptBox.textContent=''; document.body.style.removeProperty('--scale'); }
+  document.getElementById('playBtn').addEventListener('click', start);
+  document.getElementById('stopBtn').addEventListener('click', stop);
+
+  // ===== Quiz =====
+  const QA = [
+    {q:'What best describes Open Focus?', a:0, opts:[
+      'An inclusive, spacious awareness that softens effort',
+      'A way to suppress emotions by concentrating hard',
+      'A memory trick for faster recall',
+      'A breathing technique only'
+    ]},
+    {q:'Chronic narrow focus tends to…', a:2, opts:[
+      'Improve relaxation automatically', 'Have no effect on the body', 'Amplify stress, pain and muscular bracing', 'Make you more creative instantly'
+    ]},
+    {q:'A quick way to evoke Open Focus is to…', a:1, opts:[
+      'Stare harder at one spot', 'Sense the space between/inside body areas', 'Hold the breath as long as possible', 'Count backwards quickly'
+    ]},
+    {q:'Including multiple sensations at once is helpful because…', a:0, opts:[
+      'It diffuses attention and reduces unnecessary effort', 'It confuses the brain into giving up', 'It blocks emotions completely', 'It narrows attention even more'
+    ]}
+  ];
+
+  const quizBox = document.getElementById('quizBox');
+  const bar = document.getElementById('bar');
+  const scoreEl = document.getElementById('score');
+  let idx=0, score=0;
+  function renderQ(){
+    if(idx>=QA.length){ quizBox.innerHTML = `<h3>Done!</h3><p>You scored <strong>${score}</strong> / ${QA.length}</p>`; scoreEl.textContent=''; bar.style.width='100%'; return; }
+    const {q,opts,a}=QA[idx];
+    quizBox.innerHTML = `<div class="quiz-q"><h3>${q}</h3>${opts.map((t,i)=>`<label class='opt'><input type='radio' name='opt' value='${i}' /> ${t}</label>`).join('')}</div>`;
+    bar.style.width = (idx/QA.length*100)+'%';
+    quizBox.querySelectorAll('.opt').forEach((el,i)=>{
+      el.addEventListener('click',()=>{
+        const correct = (i===a); if(correct){ el.classList.add('correct'); score++; } else { el.classList.add('wrong'); }
+        setTimeout(()=>{ idx++; renderQ(); }, 600);
+      })
+    })
+  }
+  renderQ();
+  document.getElementById('restart').addEventListener('click', ()=>{ idx=0; score=0; renderQ(); });
+
+  // ===== Certificate =====
+  const cert = document.getElementById('cert'); const cx = cert.getContext('2d');
+  const drawCert = (name)=>{
+    // background
+    cx.clearRect(0,0,cert.width,cert.height);
+    const grd = cx.createLinearGradient(0,0,0,800);
+    grd.addColorStop(0,'#ffffff'); grd.addColorStop(1,'#eef2ff');
+    cx.fillStyle = grd; cx.fillRect(0,0,1200,800);
+    // border
+    cx.strokeStyle = '#7c9cff'; cx.lineWidth=10; cx.strokeRect(20,20,1160,760);
+    // title
+    cx.fillStyle = '#0b0f19'; cx.font = 'bold 56px ui-sans-serif, system-ui'; cx.textAlign='center';
+    cx.fillText('Certificate of Completion', 600, 180);
+    // subtitle
+    cx.fillStyle = '#374151'; cx.font='28px ui-sans-serif, system-ui';
+    cx.fillText('has successfully completed the Open Focus App‑Book', 600, 240);
+    // name
+    cx.fillStyle = '#0b0f19'; cx.font='bold 64px ui-sans-serif, system-ui';
+    cx.fillText(name||'Your Name', 600, 340);
+    // line
+    cx.strokeStyle='#c7d2fe'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(260,360); cx.lineTo(940,360); cx.stroke();
+    // details
+    const date = new Date().toLocaleDateString();
+    cx.fillStyle = '#111827'; cx.font='24px ui-sans-serif, system-ui';
+    cx.fillText('Date: '+date, 600, 430);
+    cx.fillText('Instructor: Open Focus App‑Book', 600, 470);
+    // seal
+    cx.fillStyle = '#7c9cff'; cx.beginPath(); cx.arc(1020,640,70,0,Math.PI*2); cx.fill();
+    cx.fillStyle = '#fff'; cx.font='bold 22px ui-sans-serif'; cx.fillText('OPEN', 1020, 630); cx.fillText('FOCUS', 1020, 660);
+  }
+  drawCert('');
+  document.getElementById('makeCert').addEventListener('click', ()=> drawCert(document.getElementById('yourName').value||'Your Name'));
+  document.getElementById('saveCert').addEventListener('click', ()=>{
+    const a=document.createElement('a'); a.download='Open-Focus-Certificate.png'; a.href=cert.toDataURL('image/png'); a.click();
+  })
+
+  // ===== Minimal PWA (manifest + service worker via Blob) =====
+  // Create and attach a manifest dynamically
+  const manifest = {
+    name: 'Open Focus — App‑Book', short_name:'Open Focus', start_url: '.', display:'standalone', background_color:'#0b0f19', theme_color:'#7c9cff',
+    icons:[{src:'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2248%22 fill=%22%230b0f19%22/><circle cx=%2250%22 cy=%2250%22 r=%2226%22 fill=%22%237c9cff%22/><circle cx=%2250%22 cy=%2250%22 r=%228%22 fill=%22%23ffffff%22/></svg>', sizes:'192x192', type:'image/svg+xml'}]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);
+
+  // Service worker (cache shell)
+  if('serviceWorker' in navigator){
+    const swCode = `
+      const CACHE = 'ofocus-v1';
+      const ASSETS = [ self.location.href ];
+      self.addEventListener('install', e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())); });
+      self.addEventListener('activate', e=>{ e.waitUntil(self.clients.claim()); });
+      self.addEventListener('fetch', e=>{ e.respondWith(caches.match(e.request).then(r=> r || fetch(e.request))); });
+    `;
+    const swUrl = URL.createObjectURL(new Blob([swCode],{type:'text/javascript'}));
+    navigator.serviceWorker.register(swUrl);
+  }
+  </script>
+</body>
+</html>
